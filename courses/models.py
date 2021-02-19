@@ -14,7 +14,7 @@ class Course(models.Model):
     published = models.BooleanField(default=False)
     updated_date = models.DateTimeField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1)
-    tags = models.ManyToManyField(Tag, related_name='Course_tags', blank=True)
+    tags = models.ManyToManyField(Tag, related_name='Course_tags')
 
 
     def __str__(self):

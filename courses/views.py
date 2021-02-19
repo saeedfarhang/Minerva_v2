@@ -5,13 +5,9 @@ from .serializers import CourseSerializer, LessonSerializer
 from rest_framework.response import Response
 from rest_framework.status import *
 from rest_framework import permissions
-from datetime import datetime
-import pytz
 from main.models import Category, Tag
-
-def tehran_now():
-    tz = pytz.timezone('Asia/tehran')
-    return datetime.now(tz)
+from functions import tehran_now
+from api_responses import *
 
 class CourseApiView(APIView):
     # list all the courses
@@ -54,7 +50,7 @@ class CourseApiView(APIView):
                 return Response(serializer.errors, HTTP_400_BAD_REQUEST)
 
         else:
-            return Response({'error':'you are not allow to do this action.'}, HTTP_400_BAD_REQUEST)
+            return Response(not_have_access, HTTP_400_BAD_REQUEST)
 
 class CourseDetailApiView(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -119,17 +115,11 @@ class CourseDetailApiView(APIView):
             serializer = CourseSerializer(course, data=data)
             if serializer.is_valid():
                 serializer.save()
-
-                if user in tag.users:
-                    pass
-                else:
-                    tag.users.add(user)
-
                 return Response(serializer.data, HTTP_200_OK)
             else:
                 return Response(serializer.errors, HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error':'unknow action'}, HTTP_400_BAD_REQUEST)
+            return Response(action_not_valid, HTTP_400_BAD_REQUEST)
             
 class LessonsApiView(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]

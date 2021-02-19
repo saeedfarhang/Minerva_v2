@@ -5,8 +5,13 @@ from rest_framework.status import *
 from rest_framework import permissions
 from .models import Tag, Category
 from courses.models import Course
+from blog.models import Blog
+from clips.models import Clip
 from courses.serializers import CourseSerializer
+from blog.serializers import BlogSerializer
+from clips.serializers import ClipSerializer
 from .serializers import CategorySerializer,TagSerializer
+from rest_framework.pagination import PageNumberPagination
 
 class CategoriesApiView(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -49,18 +54,38 @@ class CategoryDetailApiView(APIView):
                 return Response({"error":"you dont have access to do this action"}, HTTP_400_BAD_REQUEST)
 
         elif action == 'get':
+            query = request.GET.get('q',' ')
+            paginator = PageNumberPagination()
             try:
                 category = Category.objects.get(id = id)
-                courses = Course.objects.filter(category=category)
                 category_serializer = CategorySerializer(category)
-                course_serializer = CourseSerializer(courses, many=True)
-
-                return Response({"category":category_serializer.data,"courses":course_serializer.data}, HTTP_200_OK)
             except :
                 return Response({"error":"there is no category with the given id"}, HTTP_404_NOT_FOUND)
+            
+            if query == 'courses':
+                courses = Course.objects.filter(category=category)
+                course_result_page = paginator.paginate_queryset(courses, request)
+                course_serializer = CourseSerializer(course_result_page, many=True)
+                return Response({"category":category_serializer.data,"courses":course_serializer.data}, HTTP_200_OK)
+            
+            elif query == 'blogs':
+                blogs = Blog.objects.filter(category=category)
+                blog_result_page = paginator.paginate_queryset(blogs, request)
+                blog_serializer = BlogSerializer(blogs, many=True)
+                return Response({"category":category_serializer.data,"blogs":blog_serializer.data}, HTTP_200_OK)
+
+            elif query == 'clips':
+                clips = Clip.objects.filter(category=category)
+                clip_result_page = paginator.paginate_queryset(clips, request)
+                clip_serializer = ClipSerializer(clips, many=True)
+                return Response({"category":category_serializer.data,"clips":clip_serializer.data}, HTTP_200_OK)
+            else:
+                return Response({"category":category_serializer.data}, HTTP_200_OK)
+                
         else:
             return Response({"error":"this action is unvalid"}, HTTP_400_BAD_REQUEST)
-    
+
+
 
 class TagsApiView(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -89,9 +114,26 @@ class TagsApiView(APIView):
 
 class TagDetailApiView(APIView):
     def get(self, request, id):
+        paginator = PageNumberPagination()
         tag = Tag.objects.get(id = id)
-        courses = Course.objects.filter(tags=tag)
-
         tag_serializer = TagSerializer(tag)
-        course_serializer = CourseSerializer(courses, many=True)
-        return Response({"tag":tag_serializer.data,"courses":course_serializer.data}, HTTP_200_OK)
+        query = request.GET.get('q',' ')
+        if query == 'courses':
+            courses = Course.objects.filter(tags=tag)
+            course_result_page = paginator.paginate_queryset(courses, request)
+            course_serializer = CourseSerializer(course_result_page, many=True)
+            return Response({"tag":tag_serializer.data,"courses":course_serializer.data}, HTTP_200_OK)
+        
+        elif query == 'blogs':
+            blogs = Blog.objects.filter(tags=tag)
+            blog_result_page = paginator.paginate_queryset(blogs, request)
+            blog_serializer = BlogSerializer(blogs, many=True)
+            return Response({"tag":tag_serializer.data,"blogs":blog_serializer.data}, HTTP_200_OK)
+
+        elif query == 'clips':
+            clips = Clip.objects.filter(tags=tag)
+            clip_result_page = paginator.paginate_queryset(clips, request)
+            clip_serializer = ClipSerializer(clips, many=True)
+            return Response({"tag":tag_serializer.data,"clips":clip_serializer.data}, HTTP_200_OK)
+        else:
+            return Response({"tag":tag_serializer.data}, HTTP_200_OK)

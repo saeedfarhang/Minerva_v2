@@ -41,7 +41,8 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-
+    
+    is_qualify = models.BooleanField(default=True)
     is_master = models.BooleanField(default=False)
 
     objects = UserAccountManager()
